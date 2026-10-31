@@ -1,15 +1,41 @@
-// 画面の切り替え（クイズ／復習／進捗）
+// 画面の切り替え
+// URLの # のあとで画面が決まります（例：#rules は一覧、#rules/r001 はその課題）。
 
 (() => {
   const app = document.getElementById('app');
-  const quizData = (window.GDS_DATA && window.GDS_DATA.quiz) || { questions: [] };
-  const questions = quizData.questions;
+  const data = window.GDS_DATA || {};
+  const questions = (data.quiz && data.quiz.questions) || [];
   const QUICK_COUNT = 5;
+
+  // 書いてから答え合わせする練習の種類
+  const RULES = {
+    route: 'rules',
+    title: 'ルール変更',
+    lead: 'ルールを1つだけ変えたら、遊びはどう変わる？ まず自分で予想を書いてから、解説で答え合わせします。',
+    answerLabel: 'あなたの予想',
+    items: (data.rules && data.rules.items) || [],
+  };
+  const PROBLEMS = {
+    route: 'problems',
+    title: '課題と解決',
+    lead: 'プレイヤーの困りごとを、あなたならどう解く？ まず自分の案を書いてから、設計の考え方の例と比べます。',
+    answerLabel: 'あなたの解決案',
+    items: (data.problems && data.problems.items) || [],
+  };
 
   // 「今日のひとこと」は、ページを開いた時に1つ選んで、そのまま使う
   const todayTip = Tips.pick({});
 
-  const views = { quiz: showHome, review: showReview, progress: showProgress };
+  const views = {
+    quiz: showHome,
+    review: showReview,
+    glossary: () => Glossary.show(app, questions),
+    breakdown: (param) => (param ? Breakdown.showEditor(app, param) : Breakdown.showList(app)),
+    rules: (param) => showExercise(RULES, param),
+    problems: (param) => showExercise(PROBLEMS, param),
+    library: () => Library.show(app),
+    progress: showProgress,
+  };
   const doneActions = {
     restart: () => { location.hash = '#quiz'; route(); },
     goReview: () => { location.hash = '#review'; },
@@ -26,13 +52,19 @@
   }
 
   function route() {
-    const name = location.hash.slice(1);
+    const [name, param] = location.hash.slice(1).split('/');
     const view = views[name] ? name : 'quiz';
     document.querySelectorAll('.site-nav a, .tabbar a').forEach((a) => {
       a.classList.toggle('active', a.dataset.view === view);
     });
-    views[view]();
+    views[view](param);
     window.scrollTo(0, 0);
+  }
+
+  function showExercise(kind, id) {
+    const item = id && kind.items.find((i) => i.id === id);
+    if (item) Exercise.showItem(app, kind, item);
+    else Exercise.showList(app, kind);
   }
 
   function setupRubyToggle() {
@@ -123,9 +155,22 @@
 
       <div class="card">
         <h3>すぐに始める</h3>
-        <p class="note">間違えた問題 → まだ解いていない問題 の順に出ます。${QUICK_COUNT}問ごとに区切りがあります。</p>
+        <p class="note">初めての考え方は、先に「学ぶカード」で読んでから、問題で確かめます。間違えた問題 → まだ解いていない問題 の順に出ます。</p>
         <div class="btn-row">
           <button class="btn" type="button" id="quick">おまかせ ${QUICK_COUNT}問</button>
+          <a class="btn secondary" href="#glossary">用語集を読む</a>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>ほかの学び方</h3>
+        <div class="modes">
+          <a class="mode" href="#breakdown"><strong>ゲーム<ruby>分解<rt>ぶんかい</rt></ruby></strong><span>遊んだゲームを、型に沿って書き出す（${Store.loadBreakdowns().length}件）</span></a>
+          <a class="mode" href="#rules"><strong>ルール<ruby>変更<rt>へんこう</rt></ruby></strong><span>ルールを1つ変えたら？を予想する（${Exercise.countDone(RULES.items)} / ${RULES.items.length}）</span></a>
+          <a class="mode" href="#problems"><strong><ruby>課題<rt>かだい</rt></ruby>と<ruby>解決<rt>かいけつ</rt></ruby></strong><span>プレイヤーの困りごとを解く（${Exercise.countDone(PROBLEMS.items)} / ${PROBLEMS.items.length}）</span></a>
+          <a class="mode" href="#glossary"><strong><ruby>用語集<rt>ようごしゅう</rt></ruby></strong><span>考え方を、分野ごとに読む（${questions.length}）</span></a>
+          <a class="mode" href="#library"><strong><ruby>資料<rt>しりょう</rt></ruby></strong><span>日本の作り手の本・講演・動画（${Library.countDone()} / ${Library.items.length}）</span></a>
+          <a class="mode" href="#review"><strong><ruby>復習<rt>ふくしゅう</rt></ruby></strong><span>間違えた問題（${progress.review.length}問）</span></a>
         </div>
       </div>
 
@@ -219,6 +264,10 @@
         <div class="stat"><div class="num">${rate}%</div><div class="label">正解率</div></div>
         <div class="stat"><div class="num">${progress.review.length}</div><div class="label">復習リストの問題</div></div>
         <div class="stat"><div class="num">${handsOnIds.length} / ${handsOnTotal}</div><div class="label">手を動かした課題</div></div>
+        <div class="stat"><div class="num">${progress.breakdowns.length}</div><div class="label">書いたゲーム分解</div></div>
+        <div class="stat"><div class="num">${Exercise.countDone(RULES.items)} / ${RULES.items.length}</div><div class="label">ルール変更（答え合わせ済み）</div></div>
+        <div class="stat"><div class="num">${Exercise.countDone(PROBLEMS.items)} / ${PROBLEMS.items.length}</div><div class="label">課題と解決（答え合わせ済み）</div></div>
+        <div class="stat"><div class="num">${Library.countDone()} / ${Library.items.length}</div><div class="label">読んだ・見た資料</div></div>
       </div>
 
       <div class="card">

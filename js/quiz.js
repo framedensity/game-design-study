@@ -1,6 +1,7 @@
 // クイズの出題と答え合わせ
 //
 // 答えるたびに、途中の状態を保存します。ページを閉じても、次に開いた時に続きから始められます。
+// まだ一度も答えたことのない問題の前には、先に「学ぶカード」を出します（本を読んでいなくても学べるように）。
 // TIP_EVERY 問ごとに、「ひとこと」（知識・コツ・やってみよう）をはさみます。
 
 const QuizRunner = (() => {
@@ -45,12 +46,47 @@ const QuizRunner = (() => {
     session.ids = session.ids.filter((id) => byId[id]);
     session.results = session.results.filter((r) => byId[r.id]);
 
+    session.learned = session.learned || []; // この回で「学ぶカード」を読んだ問題
     let index = session.results.length;
     if (index >= session.ids.length) finish();
     else showQuestion();
 
+    function conceptName(q) {
+      return q.concept || q.choices[q.answer];
+    }
+
+    // 初めての問題なら、先に概念を学ぶ
     function showQuestion() {
       const q = byId[session.ids[index]];
+      const isNew = !Store.loadProgress().answers[q.id];
+      if (isNew && !session.learned.includes(q.id)) showLesson(q);
+      else showAsk(q);
+    }
+
+    function showLesson(q) {
+      container.innerHTML = `
+        <div class="card lesson">
+          <div class="quiz-meta">
+            <span class="tag">新しく学ぶ</span>
+            <span>${index + 1} / ${session.ids.length}</span>
+          </div>
+          <p class="note">${Ruby.render(q.category)}</p>
+          <h2 class="concept">${Ruby.render(conceptName(q))}</h2>
+          <p>${Ruby.render(q.explanation)}</p>
+          ${q.example ? `<h4 class="label">例</h4><p>${Ruby.render(q.example)}</p>` : ''}
+          ${q.demo ? `<h4 class="label">動かして確かめる</h4>${Demos.slot(q.demo)}` : ''}
+          ${UI.renderSources(q.sources)}
+          <div class="btn-row"><button class="btn" id="to-question" type="button">わかった。問題で確かめる</button></div>
+        </div>`;
+      Demos.mountAll(container);
+      container.querySelector('#to-question').addEventListener('click', () => {
+        session.learned.push(q.id);
+        Store.saveSession(session);
+        showAsk(q);
+      });
+    }
+
+    function showAsk(q) {
       const order = session.orders[q.id] || q.choices.map((_, i) => i);
       const choices = order
         .map((i) => `<button class="choice" type="button" data-choice="${i}">${Ruby.render(q.choices[i])}</button>`)
@@ -93,16 +129,21 @@ const QuizRunner = (() => {
           : '';
       const isLast = index === session.ids.length - 1;
 
+      // さっき「学ぶカード」で読んだばかりなら、解説はたたんでおく
+      const details = `
+        <h4>解説</h4>
+        <p>${Ruby.render(q.explanation)}</p>
+        ${q.example ? `<h4>例</h4><p>${Ruby.render(q.example)}</p>` : ''}
+        ${q.demo ? `<h4>動かして確かめる</h4>${Demos.slot(q.demo)}` : ''}
+        ${UI.renderSources(q.sources)}`;
+      const justLearned = session.learned.includes(q.id);
+
       container.querySelector('.saved-note').remove();
       container.querySelector('.feedback-area').innerHTML = `
         <div class="feedback">
-          <p class="${isCorrect ? 'result-ok' : 'result-ng'}">${isCorrect ? '正解！' : '不正解'}</p>
+          <p class="${isCorrect ? 'result-ok' : 'result-ng'}">${isCorrect ? '正解！' : '不正解'}　<span class="note">${Ruby.render(conceptName(q))}</span></p>
           ${reviewNote}
-          <h4>解説</h4>
-          <p>${Ruby.render(q.explanation)}</p>
-          ${q.example ? `<h4>例</h4><p>${Ruby.render(q.example)}</p>` : ''}
-          ${q.demo ? `<h4>動かして確かめる</h4>${Demos.slot(q.demo)}` : ''}
-          ${UI.renderSources(q.sources)}
+          ${justLearned ? `<details class="sample"><summary>解説をもう一度読む</summary>${details}</details>` : details}
           <div class="btn-row">
             <button class="btn next" type="button">${isLast ? '結果を見る' : '次へ'}</button>
           </div>

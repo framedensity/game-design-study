@@ -16,10 +16,18 @@ js/store.js       学習記録と、途中のクイズの保存（ブラウザ�
 js/ui.js          共通の部品（出典のリスト）
 js/demos.js       動く図解（ヒットストップ、予備動作、フロー）
 js/tips.js        「ひとこと」（知識・コツ・やってみよう）の表示
-js/quiz.js        クイズの出題と答え合わせ
-js/app.js         画面の切り替え（今日の学習／復習／進捗）
-data/quiz.js      クイズの教材データ
+js/quiz.js        クイズ（初めての問題は、先に「学ぶカード」を出す）
+js/exercise.js    書いてから答え合わせする練習（ルール変更／課題と解決）
+js/breakdown.js   ゲーム分解（下書きを自動保存）
+js/library.js     資料リスト
+js/glossary.js    用語集
+js/app.js         画面の切り替え（#rules/r001 のように、# のあとで画面が決まる）
+data/quiz.js      クイズの教材データ（concept は学ぶカードと用語集の見出し）
 data/tips.js      「ひとこと」の教材データ
+data/rules.js     ルール変更の教材データ
+data/problems.js  課題と解決の教材データ
+data/library.js   資料リストのデータ（確かめられたものだけ）
+sw.js             オフラインで開くための仕組み（ファイルを足したら FILES にも足す）
 ```
 
 教材（`data/`）と機能（`js/`）は分けてあります。問題やひとことを足したり直したりする時は、`data/` のファイルだけを編集すれば足ります。

@@ -45,8 +45,15 @@ const Store = (() => {
   // sessions: これまでに解いた回の記録
   // handsOn:  「やってみよう」をやった記録 { ID: やった日時 }
   // later:    「あとでやる」に入れた「やってみよう」のID
+  // exercises: ルール変更・課題と解決で書いた内容 { ID: { answer, reflection, revealedAt, updatedAt } }
+  // breakdowns: 保存したゲーム分解（新しい順）
+  // breakdownDraft: 書きかけのゲーム分解
+  // library:  「読んだ・見た」資料 { ID: 日時 }
   function emptyProgress() {
-    return { answers: {}, review: [], sessions: [], handsOn: {}, later: [] };
+    return {
+      answers: {}, review: [], sessions: [], handsOn: {}, later: [],
+      exercises: {}, breakdowns: [], breakdownDraft: null, library: {},
+    };
   }
 
   function loadProgress() {
@@ -131,6 +138,65 @@ const Store = (() => {
     saveProgress(progress);
   }
 
+  // ----- 書いて答え合わせする練習（ルール変更・課題と解決） -----
+  function getExercise(id) {
+    return loadProgress().exercises[id] || {};
+  }
+
+  function saveExercise(id, fields) {
+    const progress = loadProgress();
+    progress.exercises[id] = { ...(progress.exercises[id] || {}), ...fields, updatedAt: Date.now() };
+    saveProgress(progress);
+  }
+
+  // ----- ゲーム分解 -----
+  function loadBreakdowns() {
+    return loadProgress().breakdowns;
+  }
+
+  function addBreakdown(values) {
+    const progress = loadProgress();
+    const id = `b${Date.now()}`;
+    progress.breakdowns.unshift({ ...values, id, createdAt: Date.now(), updatedAt: Date.now() });
+    progress.breakdownDraft = null;
+    saveProgress(progress);
+    return id;
+  }
+
+  function updateBreakdown(id, fields) {
+    const progress = loadProgress();
+    progress.breakdowns = progress.breakdowns.map((b) => (b.id === id ? { ...b, ...fields, updatedAt: Date.now() } : b));
+    saveProgress(progress);
+  }
+
+  function deleteBreakdown(id) {
+    const progress = loadProgress();
+    progress.breakdowns = progress.breakdowns.filter((b) => b.id !== id);
+    saveProgress(progress);
+  }
+
+  function loadBreakdownDraft() {
+    return loadProgress().breakdownDraft;
+  }
+
+  function saveBreakdownDraft(draft) {
+    const progress = loadProgress();
+    progress.breakdownDraft = draft;
+    saveProgress(progress);
+  }
+
+  // ----- 資料 -----
+  function isLibraryDone(id) {
+    return Boolean(loadProgress().library[id]);
+  }
+
+  function toggleLibraryDone(id) {
+    const progress = loadProgress();
+    if (progress.library[id]) delete progress.library[id];
+    else progress.library[id] = Date.now();
+    saveProgress(progress);
+  }
+
   // ----- 設定 -----
   function loadSettings() {
     return read(SETTINGS_KEY, { ruby: true });
@@ -156,6 +222,9 @@ const Store = (() => {
     loadProgress, recordAnswer, addSession, resetProgress,
     loadSession, saveSession, clearSession,
     isHandsOnDone, markHandsOnDone, isLater, addLater,
+    getExercise, saveExercise,
+    loadBreakdowns, addBreakdown, updateBreakdown, deleteBreakdown, loadBreakdownDraft, saveBreakdownDraft,
+    isLibraryDone, toggleLibraryDone,
     loadSettings, saveSettings, exportJson, importJson,
   };
 })();

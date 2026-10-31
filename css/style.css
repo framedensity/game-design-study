@@ -277,6 +277,81 @@ select {
 }
 .chip.on { background: var(--accent); border-color: var(--accent); color: var(--card); }
 
+/* ===== 書く練習（ルール変更・課題と解決・ゲーム分解） ===== */
+a.btn { display: inline-block; text-decoration: none; }
+.btn:disabled { opacity: 0.45; cursor: default; }
+.back { color: var(--accent); text-decoration: none; font-size: 14px; }
+textarea, input[type="text"] {
+  width: 100%;
+  font: inherit;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  resize: vertical;
+}
+textarea:focus, input[type="text"]:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.label { display: block; margin: 16px 0 4px; font-size: 13px; font-weight: 700; color: var(--mute); letter-spacing: 0.05em; }
+.hint { margin: 0 0 6px; }
+.prompt {
+  margin: 14px 0 4px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--accent-bg);
+  font-weight: 600;
+}
+.ex-heading, .concept { margin: 6px 0 10px; }
+.ex-list { display: grid; gap: 6px; }
+.ex-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--ink);
+  text-decoration: none;
+}
+.ex-row:hover { border-color: var(--accent); }
+.ex-title { flex: 1; font-weight: 600; min-width: 10em; }
+.points { padding-left: 20px; }
+.points li { margin: 4px 0; }
+.approach { border-left: 4px solid var(--ok); padding: 4px 0 4px 12px; margin: 10px 0; }
+.approach p { margin: 4px 0; }
+.tradeoff { color: var(--warn); font-size: 14px; }
+details.sample, details.term { margin-top: 12px; }
+details summary { cursor: pointer; color: var(--accent); font-weight: 600; }
+details.term { border-top: 1px solid var(--line); padding-top: 8px; }
+details.term summary { color: var(--ink); }
+details.term .status { margin-left: 8px; }
+dl dt { font-weight: 700; margin-top: 8px; font-size: 14px; color: var(--mute); }
+dl dd { margin: 2px 0 0; }
+.lesson { border-color: var(--ok); }
+
+/* ===== トップの「ほかの学び方」 ===== */
+.modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 8px; }
+.mode {
+  display: block;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  text-decoration: none;
+  color: var(--ink);
+}
+.mode:hover { border-color: var(--accent); }
+.mode strong { display: block; }
+.mode span { font-size: 13px; color: var(--mute); }
+
+/* ===== 資料 ===== */
+.lib-item { border-top: 1px solid var(--line); padding: 10px 0; }
+.lib-item:first-of-type { border-top: none; }
+.lib-item p { margin: 4px 0; }
+.sources-line { font-size: 13px; word-break: break-all; }
+.sources-line a { color: var(--accent); }
+
 /* ===== 進捗 ===== */
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
 .stat { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
