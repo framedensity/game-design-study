@@ -4,7 +4,7 @@
 // つながっていない時（電車の中など）は、保存しておいたものを使います。
 // ファイルを足した時は、下の FILES にも足してください。
 
-const CACHE = 'gds-v4';
+const CACHE = 'gds-v5';
 const FILES = [
   './',
   './index.html',
