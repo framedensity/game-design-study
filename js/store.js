@@ -106,6 +106,18 @@ const Store = (() => {
     return { change, nextInDays: isCorrect ? INTERVAL_DAYS[record.box - 1] : 0 };
   }
 
+  // 新しい考え方を「学んだ」と記録する（体験や予想をして、解説を読んだ時）。
+  // その場では問題を出さず、1日後の復習で、はじめて確かめる。
+  function markLearned(questionId) {
+    const progress = loadProgress();
+    if (!progress.answers[questionId]) {
+      progress.answers[questionId] = {
+        attempts: 0, correct: 0, box: 0, learnedAt: Date.now(), due: Date.now() + INTERVAL_DAYS[0] * DAY_MS,
+      };
+      saveProgress(progress);
+    }
+  }
+
   // 今日復習する問題のID（間違えた問題と、復習の日が来た問題）
   function dueQuestionIds() {
     const progress = loadProgress();
@@ -294,7 +306,7 @@ const Store = (() => {
   }
 
   return {
-    loadProgress, recordAnswer, dueQuestionIds, addSession, resetProgress,
+    loadProgress, recordAnswer, markLearned, dueQuestionIds, addSession, resetProgress,
     loadList, addListItem, updateListItem, deleteListItem, activeProject,
     loadSession, saveSession, clearSession,
     isHandsOnDone, markHandsOnDone, isLater, addLater,

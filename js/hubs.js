@@ -12,6 +12,7 @@ const Hubs = (() => {
       <h2><ruby>練習<rt>れんしゅう</rt></ruby></h2>
       <p class="lead">手を動かして、書いて、確かめる練習です。どれも途中でやめても、自動で保存されます。</p>
       <div class="modes">
+        ${card('#lab', '<ruby>体験<rt>たいけん</rt></ruby>チャレンジ', `手を動かして、体で確かめる（${Challenges.items.length}）`)}
         ${card('#verbal', '<ruby>言語化<rt>げんごか</rt></ruby>', `考えを短く、伝わる言葉にする（${Exercise.countDone(kinds.verbal.items)} / ${kinds.verbal.items.length}）`)}
         ${card('#breakdown', 'ゲーム<ruby>分解<rt>ぶんかい</rt></ruby>', `遊んだゲームを、型に沿って書き出す（${progress.breakdowns.length}件）`)}
         ${card('#rules', 'ルール<ruby>変更<rt>へんこう</rt></ruby>', `ルールを1つ変えたら？を予想する（${Exercise.countDone(kinds.rules.items)} / ${kinds.rules.items.length}）`)}

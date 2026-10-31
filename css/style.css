@@ -49,6 +49,8 @@ a:visited { color: var(--accent); }
 
 /* ===== ふりがな ===== */
 rt { font-size: 0.55em; color: var(--mute); }
+/* ふりがなが長い時に、漢字の間が空いてしまわないようにする */
+ruby { ruby-align: center; }
 /* ボタンで「なし」にすると、ふりがなを隠す */
 .ruby-hidden rt { display: none; }
 /* 読みが未確認の言葉 */
@@ -392,6 +394,52 @@ dl dd { margin: 2px 0 0; }
   0% { transform: scale(1.6); color: var(--accent); }
   100% { transform: none; }
 }
+
+/* ===== 体験チャレンジ ===== */
+.challenge-goal {
+  margin: 4px 0 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--warn-bg);
+  color: var(--ink);
+  font-weight: 600;
+}
+.challenge-status { min-height: 1.5em; font-size: 14px; }
+.challenge-body { margin: 6px 0; }
+.order-picked { padding-left: 22px; min-height: 2em; }
+.order-picked li { margin: 4px 0; }
+.order-pool { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.order-pool .chip, .order-picked .chip { font-size: 14px; padding: 6px 12px; text-align: left; }
+.ab-wrap { display: flex; gap: 10px; flex-wrap: wrap; }
+.ab-col { flex: 1; min-width: 140px; border: 1px solid var(--line); border-radius: 10px; padding: 6px 8px; background: var(--bg); }
+.ab-label { margin: 0; font-weight: 800; color: var(--accent); }
+.ab-canvas canvas { display: block; width: 100%; height: auto; }
+.challenge canvas { display: block; width: 100%; height: auto; }
+.checks { list-style: none; padding: 0; margin: 4px 0 8px; font-size: 14px; }
+.checks li { margin: 2px 0; color: var(--mute); }
+.checks li.ok { color: var(--ok); font-weight: 700; }
+.dice-row { display: flex; gap: 16px; align-items: center; }
+.dice-row p { margin: 2px 0; }
+.dice-face {
+  width: 72px; height: 72px; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 34px; font-weight: 800;
+  border: 2px solid var(--ink); border-radius: 14px; background: var(--card);
+}
+.race { margin: 8px 0; }
+.race-lane { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
+.race-name { width: 5.5em; font-size: 12px; color: var(--mute); flex: none; }
+.race-track { flex: 1; height: 14px; border-radius: 7px; background: var(--bg); border: 1px solid var(--line); overflow: hidden; }
+.race-car { height: 100%; width: 0; background: var(--accent); }
+.race-car.boost { background: var(--warn); }
+.race-table { font-size: 12px; }
+.walls { display: flex; gap: 10px; margin: 8px 0; }
+.wall-btn { flex: 1; padding: 6px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); cursor: pointer; }
+.wall-btn:disabled { cursor: default; }
+.wall-btn svg { width: 100%; height: auto; display: block; }
+.wall-btn .wall { fill: var(--mute); opacity: 0.35; }
+.wall-btn .ledge { fill: var(--ink); }
+.wall-btn .crack { fill: none; stroke: var(--ink); stroke-width: 3; }
 
 /* ===== 企画書 ===== */
 .doc { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 22px; margin: 12px 0; }

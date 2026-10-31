@@ -37,6 +37,7 @@ window.GDS_DATA.quiz = {
     },
     {
       "id": "q002",
+      "challenge": "c-loop",
       "concept": "コアループ",
       "category": "基本の概念",
       "question": "「狩る→素材を集める→装備を作る→より強い相手に挑む」のように、遊びの流れが輪になって繰り返される構造を何と呼びますか？",
@@ -77,6 +78,7 @@ window.GDS_DATA.quiz = {
     },
     {
       "id": "q005",
+      "challenge": "c-flow",
       "concept": "フロー",
       "category": "難易度と体験",
       "demo": "flow",
@@ -131,6 +133,7 @@ window.GDS_DATA.quiz = {
     },
     {
       "id": "q009",
+      "challenge": "c-dice",
       "concept": "リスクとリターン（桜井政博《さくらいまさひろ》さん）",
       "category": "選択と判断",
       "question": "桜井政博《さくらいまさひろ》さんが、ゲームの面白さの基本として重視して語っている考え方はどれですか？",
@@ -171,6 +174,7 @@ window.GDS_DATA.quiz = {
     },
     {
       "id": "q012",
+      "challenge": "c-hitstop",
       "concept": "ヒットストップと手触り",
       "category": "手触り",
       "demo": "hitstop",
@@ -199,6 +203,7 @@ window.GDS_DATA.quiz = {
     },
     {
       "id": "q014",
+      "challenge": "c-race",
       "concept": "追い上げ（キャッチアップ）の仕組み",
       "category": "難易度と体験",
       "question": "レースゲームで、順位が下のプレイヤーほど強いアイテムが出やすい仕組みの、主な狙いはどれですか？",
@@ -290,6 +295,7 @@ window.GDS_DATA.quiz = {
     },
     {
       "id": "q021",
+      "challenge": "c-afford",
       "concept": "アフォーダンス",
       "category": "学習と導線",
       "question": "見た目だけで「ここは登れそう」「これは押せそう」と、使い方が伝わる性質を何と呼びますか？",
@@ -321,6 +327,7 @@ window.GDS_DATA.quiz = {
     },
     {
       "id": "s002",
+      "challenge": "c-attack-order",
       "concept": "攻撃モーションの内訳",
       "category": "桜井さんの動画から",
       "demo": "attack",
@@ -335,6 +342,7 @@ window.GDS_DATA.quiz = {
     },
     {
       "id": "s003",
+      "challenge": "c-attack-tune",
       "concept": "かまえは瞬時に極端に",
       "category": "桜井さんの動画から",
       "demo": "attack",
@@ -363,6 +371,7 @@ window.GDS_DATA.quiz = {
     },
     {
       "id": "s005",
+      "challenge": "c-hitbox",
       "concept": "攻撃判定を常に意識",
       "category": "桜井さんの動画から",
       "demo": "attack",
@@ -513,6 +522,7 @@ window.GDS_DATA.quiz = {
     },
     {
       "id": "u002",
+      "challenge": "c-hud",
       "concept": "情報の優先順位《ゆうせんじゅんい》",
       "category": "UIデザイン",
       "question": "画面に情報をのせる時に、最初に決めるべきことはどれですか？",
@@ -524,6 +534,7 @@ window.GDS_DATA.quiz = {
     },
     {
       "id": "u003",
+      "challenge": "c-feedback",
       "concept": "フィードバック",
       "category": "UIデザイン",
       "demo": "uifeedback",
@@ -611,6 +622,18 @@ window.GDS_DATA.quiz = {
       "sources": [
         { "text": "「メニューにヘルプを【UI】」2024年6月28日（一覧で確認。動画の細かな内容は未確認）", "url": "https://thetvdb.com/series/masahiro-sakurai-on-creating-games/allseasons/official", "status": "確認済み" }
       ]
+    },
+    {
+      "id": "d001",
+      "challenge": "c-dodge",
+      "concept": "敵の予備動作《よびどうさ》は、読ませるための情報",
+      "category": "手触り",
+      "question": "敵の攻撃の予備動作（構え）を、とても短くすると、プレイヤーにとって何が変わりますか？",
+      "choices": ["よけにくくなり、理不尽に感じやすくなる", "よけやすくなる", "見た目だけが変わり、遊びは変わらない", "攻撃の威力が上がる"],
+      "answer": 0,
+      "explanation": "敵の予備動作は、プレイヤーに「次に何が来るか」を伝える情報です。短くすると読む時間がなくなり、よけにくくなります。反応が間に合わないと、失敗を「自分のせい」と思えず、理不尽に感じやすくなります。プレイヤー自身の攻撃は短く大げさに、敵の攻撃は読めるだけの長さに、と使い分けます。",
+      "example": "同じ敵でも、弱い攻撃は短い構えで、大技は長くはっきりした構えで見せると、「読んで、よける」楽しさが生まれます。（考察）",
+      "sources": [{ "text": "アニメーションの12原則（予備動作）。書誌の詳しい情報", "status": "未確認" }]
     }
   ]
 };

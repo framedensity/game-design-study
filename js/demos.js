@@ -152,7 +152,8 @@ const Demos = (() => {
 
   // ----- 予備動作 -----
   // 敵の予備動作の長さを変えて、よけやすさ（難しさ）がどう変わるかを体で確かめる
-  function anticipation(el) {
+  // opts.onStat(構えのコマ数, 成績) … よけた・当たったが決まるたびに呼ばれる（チャレンジ用）
+  function anticipation(el, opts = {}) {
     el.insertAdjacentHTML('beforeend',
       '<p class="demo-title">予備動作：敵が構えている間に「よける」を押そう。構えの長さを変えると？</p>');
     const W = 640, H = 170, GROUND = 140, SIZE = 36;
@@ -178,6 +179,7 @@ const Demos = (() => {
     function showStat() {
       const st = stat();
       label.textContent = `${s.message ? s.message + '　' : ''}よけた ${st.ok} / ${st.total}`;
+      if (opts.onStat) opts.onStat(windup, JSON.parse(JSON.stringify(stats)));
     }
 
     function press() {
@@ -351,7 +353,8 @@ const Demos = (() => {
 
   // ----- 攻撃のタイムライン -----
   // かまえ・ヒットストップ・攻撃・戻りのコマ数を変えて、手触りと「押してから当たるまで」の時間を確かめる
-  function attack(el) {
+  // opts.onChange(コマ数) … つまみを動かすたびに呼ばれる（チャレンジ用）
+  function attack(el, opts = {}) {
     el.insertAdjacentHTML('beforeend', '<p class="demo-title">攻撃のタイムライン：コマ数を変えて、手触りを確かめよう</p>');
     const W = 640, H = 190, GROUND = 170, SIZE = 36, BASE = 170, LUNGE = 40;
     const DUMMY = BASE + LUNGE + SIZE + 30;
@@ -382,6 +385,7 @@ const Demos = (() => {
     function updateLabel() {
       const total = v.windup + v.stop + v.active + v.recovery;
       label.textContent = `押してから当たるまで ${v.windup}コマ（約${(v.windup / 60).toFixed(2)}秒）／全体 ${total}コマ（約${(total / 60).toFixed(2)}秒）`;
+      if (opts.onChange) opts.onChange({ ...v });
     }
 
     ui.querySelectorAll('input[type="range"]').forEach((input) => {
@@ -477,7 +481,8 @@ const Demos = (() => {
 
   // ----- UIのフィードバック -----
   // 押した時に反応がないボタンと、あるボタンを押し比べる
-  function uifeedback(el) {
+  // opts.onPress(押した方, 回数) … ボタンを押すたびに呼ばれる（チャレンジ用）
+  function uifeedback(el, opts = {}) {
     el.insertAdjacentHTML('beforeend', `
       <p class="demo-title">フィードバック：2つのボタンを押し比べてみよう</p>
       <div class="uf-wrap">
@@ -491,6 +496,7 @@ const Demos = (() => {
       const kind = button.classList.contains('rich') ? 'rich' : 'plain';
       button.addEventListener('click', () => {
         counts[kind] += 1;
+        if (opts.onPress) opts.onPress(kind, { ...counts });
         const out = el.querySelector(`[data-count="${kind}"]`);
         out.textContent = counts[kind];
         if (kind === 'rich') {
@@ -506,5 +512,10 @@ const Demos = (() => {
 
   const registry = { hitstop, anticipation, flow, attack, uifeedback };
 
-  return { slot, mountAll };
+  // チャレンジから、デモを部品として使うための入口
+  function create(name, el, opts) {
+    registry[name](el, opts || {});
+  }
+
+  return { slot, mountAll, create, helpers: { makeCanvas, loop, color } };
 })();

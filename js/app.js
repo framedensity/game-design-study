@@ -40,6 +40,7 @@
     quiz: showHome,
     review: showReview,
     practice: () => Hubs.showPractice(app, { verbal: VERBAL, rules: RULES, problems: PROBLEMS }),
+    lab: (param) => (param ? Challenges.showOne(app, param, questions) : Challenges.showList(app, questions)),
     verbal: (param) => showExercise(VERBAL, param),
     breakdown: (param) => (param ? Breakdown.showEditor(app, param) : Breakdown.showList(app)),
     rules: (param) => showExercise(RULES, param),
@@ -124,13 +125,17 @@
     return questions.filter((q) => ids.includes(q.id));
   }
 
-  // 「おまかせ」で出す問題：今日の復習 → まだ解いていない問題 → 解いたことがある問題 の順
+  // 「おまかせ」で出すもの：今日の復習（確かめる）→ まだ学んでいない考え方（学ぶ）
+  // → それでも足りなければ、前に確かめたことのある問題。学んだばかりの考え方は、復習の日まで出さない。
   function pickQuick(count) {
     const progress = Store.loadProgress();
     const due = QuizRunner.shuffle(dueQuestions());
     const dueIds = due.map((q) => q.id);
     const fresh = QuizRunner.shuffle(questions.filter((q) => !progress.answers[q.id]));
-    const rest = QuizRunner.shuffle(questions.filter((q) => progress.answers[q.id] && !dueIds.includes(q.id)));
+    const rest = QuizRunner.shuffle(questions.filter((q) => {
+      const record = progress.answers[q.id];
+      return record && record.attempts > 0 && !dueIds.includes(q.id);
+    }));
     return [...due, ...fresh, ...rest].slice(0, count);
   }
 
@@ -217,9 +222,10 @@
 
       <div class="card">
         <h3>すぐに始める</h3>
-        <p class="note">今日の復習（${due.length}問）→ まだ解いていない問題 の順に出ます。初めての考え方は、先に「学ぶカード」で読んでから、問題で確かめます。</p>
+        <p class="note">新しい考え方は、まず手を動かして体験（または予想）してから、名前を知ります。確かめる問題は、日をあけて、別の場面で出ます。今日の復習（${due.length}）→ 新しい考え方 の順です。</p>
         <div class="btn-row">
-          <button class="btn" type="button" id="quick">おまかせ ${QUICK_COUNT}問</button>
+          <button class="btn" type="button" id="quick">おまかせ ${QUICK_COUNT}つ</button>
+          <a class="btn secondary" href="#lab">体験チャレンジ</a>
           ${due.length ? `<a class="btn secondary" href="#review">今日の復習（${due.length}問）</a>` : ''}
         </div>
       </div>
@@ -309,7 +315,7 @@
     const formatDate = (at) => new Date(at).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
     const sessionRows = progress.sessions.slice(0, 10).map((s) =>
-      `<tr><td>${formatDate(s.at)}</td><td>${s.mode === 'review' ? '復習' : 'クイズ'}</td><td>${s.correct} / ${s.total}</td></tr>`).join('');
+      `<tr><td>${formatDate(s.at)}</td><td>${s.mode === 'review' ? '復習' : 'クイズ'}</td><td>${s.total ? `${s.correct} / ${s.total} 正解` : ''}${s.learned ? `${s.total ? '、' : ''}学んだ ${s.learned}` : ''}${!s.total && !s.learned ? '—' : ''}</td></tr>`).join('');
 
     const handsOnRows = handsOnIds
       .map((id) => ({ tip: Tips.byId(id), at: progress.handsOn[id] }))
@@ -344,7 +350,7 @@
 
       <div class="card">
         <h3>最近の記録</h3>
-        ${sessionRows ? `<table><tr><th>日時</th><th>種類</th><th>正解</th></tr>${sessionRows}</table>` : '<p class="note">まだ記録がありません。</p>'}
+        ${sessionRows ? `<table><tr><th>日時</th><th>種類</th><th>結果</th></tr>${sessionRows}</table>` : '<p class="note">まだ記録がありません。</p>'}
       </div>
 
       <div class="card">
