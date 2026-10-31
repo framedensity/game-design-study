@@ -113,7 +113,7 @@ const QuizRunner = (() => {
       const isCorrect = chosen === q.answer;
       session.results.push({ id: q.id, ok: isCorrect });
       Store.saveSession(session);
-      const change = Store.recordAnswer(q.id, isCorrect);
+      const { change, nextInDays } = Store.recordAnswer(q.id, isCorrect);
 
       container.querySelectorAll('.choice').forEach((button) => {
         const i = Number(button.dataset.choice);
@@ -124,9 +124,7 @@ const QuizRunner = (() => {
 
       const reviewNote = change === 'added'
         ? '<p class="note">この問題を復習リストに入れました。</p>'
-        : change === 'removed'
-          ? '<p class="note">正解したので、復習リストから外しました。</p>'
-          : '';
+        : `<p class="note">${change === 'removed' ? '正解したので、復習リストから外しました。' : ''}この問題は、${nextInDays}日後にもう一度出ます。</p>`;
       const isLast = index === session.ids.length - 1;
 
       // さっき「学ぶカード」で読んだばかりなら、解説はたたんでおく

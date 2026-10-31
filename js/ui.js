@@ -16,5 +16,16 @@ const UI = (() => {
     return `<h4>出典</h4><ul class="sources">${items.join('')}</ul>`;
   }
 
-  return { renderSources };
+  // 学習の記録を、ファイルに書き出す（バックアップ）。書き出した日時を覚えておく。
+  function exportProgress() {
+    const blob = new Blob([Store.exportJson()], { type: 'application/json' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `game-design-study-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    Store.saveSettings({ ...Store.loadSettings(), lastExportAt: Date.now() });
+  }
+
+  return { renderSources, exportProgress };
 })();

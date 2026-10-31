@@ -349,7 +349,162 @@ const Demos = (() => {
     loop(canvas, step, draw);
   }
 
-  const registry = { hitstop, anticipation, flow };
+  // ----- 攻撃のタイムライン -----
+  // かまえ・ヒットストップ・攻撃・戻りのコマ数を変えて、手触りと「押してから当たるまで」の時間を確かめる
+  function attack(el) {
+    el.insertAdjacentHTML('beforeend', '<p class="demo-title">攻撃のタイムライン：コマ数を変えて、手触りを確かめよう</p>');
+    const W = 640, H = 190, GROUND = 170, SIZE = 36, BASE = 170, LUNGE = 40;
+    const DUMMY = BASE + LUNGE + SIZE + 30;
+    const { canvas, ctx } = makeCanvas(el, W, H);
+    const SLIDERS = [
+      { key: 'windup', label: 'かまえ', min: 1, max: 30, value: 8 },
+      { key: 'stop', label: 'ヒットストップ', min: 0, max: 16, value: 6 },
+      { key: 'active', label: '攻撃', min: 1, max: 10, value: 3 },
+      { key: 'recovery', label: '戻り', min: 2, max: 40, value: 16 },
+    ];
+    const v = {};
+    SLIDERS.forEach((s) => { v[s.key] = s.value; });
+    const ui = addControls(el, `${SLIDERS.map((s) => `
+      <label class="slider"><span>${s.label} <b data-out="${s.key}">${s.value}</b>コマ</span>
+        <input type="range" min="${s.min}" max="${s.max}" value="${s.value}" data-key="${s.key}"></label>`).join('')}
+      <button class="chip slow" type="button">スロー</button><span class="demo-label"></span>`);
+    const label = ui.querySelector('.demo-label');
+
+    let slow = false;
+    let tickCount = 0;
+    let s;
+    const IDLE = 30, WAIT = 20;
+
+    function phases() {
+      return [['idle', IDLE], ['windup', v.windup], ['stop', v.stop], ['active', v.active], ['recovery', v.recovery], ['wait', WAIT]];
+    }
+    function reset() { s = { index: 0, t: 0 }; }
+    function updateLabel() {
+      const total = v.windup + v.stop + v.active + v.recovery;
+      label.textContent = `押してから当たるまで ${v.windup}コマ（約${(v.windup / 60).toFixed(2)}秒）／全体 ${total}コマ（約${(total / 60).toFixed(2)}秒）`;
+    }
+
+    ui.querySelectorAll('input[type="range"]').forEach((input) => {
+      input.addEventListener('input', () => {
+        v[input.dataset.key] = Number(input.value);
+        ui.querySelector(`[data-out="${input.dataset.key}"]`).textContent = input.value;
+        updateLabel();
+        reset();
+      });
+    });
+    ui.querySelector('.slow').addEventListener('click', (e) => {
+      slow = !slow;
+      e.currentTarget.classList.toggle('on', slow);
+    });
+
+    function step() {
+      tickCount += 1;
+      if (slow && tickCount % 4) return;
+      s.t += 1;
+      const list = phases();
+      while (s.t >= list[s.index][1]) {
+        s.t -= list[s.index][1];
+        s.index = (s.index + 1) % list.length;
+        if (list[s.index][1] > 0) break;
+      }
+    }
+
+    function draw() {
+      const list = phases();
+      const [phase] = list[s.index];
+      const p = list[s.index][1] ? s.t / list[s.index][1] : 1;
+      ctx.clearRect(0, 0, W, H);
+
+      // タイムライン（かまえ・止め・攻撃・戻り）
+      const segments = [['windup', '--warn'], ['stop', '--ink'], ['active', '--ng'], ['recovery', '--mute']];
+      const total = v.windup + v.stop + v.active + v.recovery;
+      let x = 20;
+      const scale = (W - 40) / total;
+      let playhead = null;
+      segments.forEach(([key, colorName]) => {
+        const w = v[key] * scale;
+        ctx.fillStyle = color(colorName);
+        ctx.globalAlpha = key === 'stop' ? 0.5 : 0.85;
+        ctx.fillRect(x, 14, w, 14);
+        ctx.globalAlpha = 1;
+        if (key === phase) playhead = x + w * p;
+        x += w;
+      });
+      if (playhead !== null) {
+        ctx.fillStyle = color('--accent');
+        ctx.fillRect(playhead - 1, 8, 3, 26);
+      }
+      ctx.font = '12px "Hiragino Sans", "Yu Gothic", sans-serif';
+      ctx.fillStyle = color('--mute');
+      ctx.fillText('かまえ', 20, 48);
+      ctx.fillText('止め・攻撃・戻り →', 20 + v.windup * scale + 6, 48);
+
+      // 地面
+      ctx.strokeStyle = color('--line');
+      ctx.beginPath(); ctx.moveTo(0, GROUND); ctx.lineTo(W, GROUND); ctx.stroke();
+
+      // 攻撃する側の位置
+      let px = BASE;
+      if (phase === 'windup') px = BASE - 20 * p;
+      else if (phase === 'stop') px = BASE + LUNGE;
+      else if (phase === 'active') px = BASE + LUNGE + 6 * p;
+      else if (phase === 'recovery') px = BASE + (LUNGE + 6) * (1 - p);
+
+      // 当たる側（止めている間はふるえ、そのあと押される）
+      let dx = 0;
+      if (phase === 'stop') dx = s.t % 2 ? 3 : -3;
+      else if (phase === 'active') dx = 18 * p;
+      else if (phase === 'recovery') dx = 18 * (1 - p);
+
+      ctx.fillStyle = color('--accent');
+      ctx.fillRect(px, GROUND - SIZE, SIZE, SIZE);
+      ctx.fillStyle = color('--ng');
+      ctx.fillRect(DUMMY + dx, GROUND - SIZE, SIZE, SIZE);
+
+      // 攻撃判定（当たっている間だけ出す）
+      if (phase === 'stop' || phase === 'active') {
+        ctx.strokeStyle = color('--warn');
+        ctx.lineWidth = 2;
+        ctx.strokeRect(px + SIZE, GROUND - SIZE + 6, 34, SIZE - 12);
+        ctx.lineWidth = 1;
+      }
+    }
+
+    reset();
+    updateLabel();
+    loop(canvas, step, draw);
+  }
+
+  // ----- UIのフィードバック -----
+  // 押した時に反応がないボタンと、あるボタンを押し比べる
+  function uifeedback(el) {
+    el.insertAdjacentHTML('beforeend', `
+      <p class="demo-title">フィードバック：2つのボタンを押し比べてみよう</p>
+      <div class="uf-wrap">
+        <div class="uf-col"><button class="uf-btn plain" type="button">反応なし</button><p class="note">押した回数：<b class="uf-count" data-count="plain">0</b></p></div>
+        <div class="uf-col"><button class="uf-btn rich" type="button">反応あり</button><p class="note">押した回数：<b class="uf-count" data-count="rich">0</b></p></div>
+      </div>
+      <p class="note">右のボタンは、押した瞬間に沈んで色が変わり、数字がはねます。どちらが「押した」と感じますか？</p>`);
+
+    const counts = { plain: 0, rich: 0 };
+    el.querySelectorAll('.uf-btn').forEach((button) => {
+      const kind = button.classList.contains('rich') ? 'rich' : 'plain';
+      button.addEventListener('click', () => {
+        counts[kind] += 1;
+        const out = el.querySelector(`[data-count="${kind}"]`);
+        out.textContent = counts[kind];
+        if (kind === 'rich') {
+          button.classList.remove('pressed');
+          out.classList.remove('bump');
+          void button.offsetWidth; // アニメーションを最初からやり直す
+          button.classList.add('pressed');
+          out.classList.add('bump');
+        }
+      });
+    });
+  }
+
+  const registry = { hitstop, anticipation, flow, attack, uifeedback };
 
   return { slot, mountAll };
 })();

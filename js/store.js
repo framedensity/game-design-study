@@ -50,10 +50,13 @@ const Store = (() => {
   // breakdownDraft: 書きかけのゲーム分解
   // library:  「読んだ・見た」資料 { ID: 日時 }
   // watched:  「見た」桜井さんの動画 { ID: 日時 }
+  // projects: 自分の企画ノート / activeProject: 最後に開いた企画のID
+  // playtests: 試遊ログ
   function emptyProgress() {
     return {
       answers: {}, review: [], sessions: [], handsOn: {}, later: [],
       exercises: {}, breakdowns: [], breakdownDraft: null, library: {}, watched: {},
+      projects: [], activeProject: null, playtests: [],
     };
   }
 
@@ -66,8 +69,13 @@ const Store = (() => {
     write(PROGRESS_KEY, progress);
   }
 
+  // 間隔をあけた復習：正解を重ねるたびに、次に出るまでの日数がのびる（1日 → 3日 → 7日 → 21日）
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const INTERVAL_DAYS = [1, 3, 7, 21];
+
   // 1問の答えを記録する。
   // 間違えた問題は復習リストに入り、あとで正解すると外れる。
+  // 戻り値：{ change: 'added' | 'removed' | null, nextInDays: 次に出るまでの日数 }
   function recordAnswer(questionId, isCorrect) {
     const progress = loadProgress();
     const record = progress.answers[questionId] || { attempts: 0, correct: 0 };
@@ -75,6 +83,13 @@ const Store = (() => {
     if (isCorrect) record.correct += 1;
     record.lastCorrect = isCorrect;
     record.lastAt = Date.now();
+    if (isCorrect) {
+      record.box = Math.min((record.box || 0) + 1, INTERVAL_DAYS.length);
+      record.due = Date.now() + INTERVAL_DAYS[record.box - 1] * DAY_MS;
+    } else {
+      record.box = 0;
+      record.due = Date.now();
+    }
     progress.answers[questionId] = record;
 
     let change = null;
@@ -88,7 +103,19 @@ const Store = (() => {
     }
 
     saveProgress(progress);
-    return change;
+    return { change, nextInDays: isCorrect ? INTERVAL_DAYS[record.box - 1] : 0 };
+  }
+
+  // 今日復習する問題のID（間違えた問題と、復習の日が来た問題）
+  function dueQuestionIds() {
+    const progress = loadProgress();
+    const now = Date.now();
+    return Object.keys(progress.answers).filter((id) => {
+      const record = progress.answers[id];
+      // 前の版で記録した答えには due がないので、最後に答えた1日後を復習日とみなす
+      const due = record.due || (record.lastAt || 0) + DAY_MS;
+      return progress.review.includes(id) || due <= now;
+    });
   }
 
   function addSession(session) {
@@ -198,6 +225,41 @@ const Store = (() => {
     saveProgress(progress);
   }
 
+  // ----- 書きためるノート（企画ノート・試遊ログ） -----
+  // key は 'projects' か 'playtests'。新しいものが先頭に来る。
+  function loadList(key) {
+    return loadProgress()[key] || [];
+  }
+
+  function addListItem(key, values) {
+    const progress = loadProgress();
+    const id = `${key.slice(0, 2)}${Date.now()}`;
+    progress[key] = [{ ...values, id, createdAt: Date.now(), updatedAt: Date.now() }, ...(progress[key] || [])];
+    if (key === 'projects') progress.activeProject = id;
+    saveProgress(progress);
+    return id;
+  }
+
+  function updateListItem(key, id, fields) {
+    const progress = loadProgress();
+    progress[key] = (progress[key] || []).map((item) => (item.id === id ? { ...item, ...fields, updatedAt: Date.now() } : item));
+    if (key === 'projects') progress.activeProject = id;
+    saveProgress(progress);
+  }
+
+  function deleteListItem(key, id) {
+    const progress = loadProgress();
+    progress[key] = (progress[key] || []).filter((item) => item.id !== id);
+    if (progress.activeProject === id) progress.activeProject = null;
+    saveProgress(progress);
+  }
+
+  // 「企画ノートに入れる」先：最後に開いた企画。なければ一番新しい企画。
+  function activeProject() {
+    const progress = loadProgress();
+    return progress.projects.find((p) => p.id === progress.activeProject) || progress.projects[0] || null;
+  }
+
   // ----- 桜井さんの動画 -----
   function isWatched(id) {
     return Boolean(loadProgress().watched[id]);
@@ -232,7 +294,8 @@ const Store = (() => {
   }
 
   return {
-    loadProgress, recordAnswer, addSession, resetProgress,
+    loadProgress, recordAnswer, dueQuestionIds, addSession, resetProgress,
+    loadList, addListItem, updateListItem, deleteListItem, activeProject,
     loadSession, saveSession, clearSession,
     isHandsOnDone, markHandsOnDone, isLater, addLater,
     getExercise, saveExercise,

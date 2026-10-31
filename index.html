@@ -7,27 +7,28 @@
   <!-- スマホのホーム画面に追加した時の設定 -->
   <meta name="theme-color" content="#1d5fa8">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="ゲーム設計">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <!--
+    メニューは5つ。data-views に並べた画面のどれかを開いている時、そのメニューが光る。
+    画面を足した時は、ここの data-views にも足す（上のメニューと、下のタブの両方）。
+  -->
   <header class="site-header">
     <div class="header-row">
       <h1 class="site-title">ゲーム<ruby>設計<rt>せっけい</rt></ruby> 学習帳</h1>
       <button id="ruby-toggle" class="toggle" type="button" aria-pressed="true">ふりがな：あり</button>
     </div>
     <nav class="site-nav" aria-label="メニュー">
-      <a href="#quiz" data-view="quiz">今日の学習</a>
-      <a href="#review" data-view="review"><ruby>復習<rt>ふくしゅう</rt></ruby></a>
-      <a href="#glossary" data-view="glossary"><ruby>用語集<rt>ようごしゅう</rt></ruby></a>
-      <a href="#breakdown" data-view="breakdown">ゲーム<ruby>分解<rt>ぶんかい</rt></ruby></a>
-      <a href="#rules" data-view="rules">ルール<ruby>変更<rt>へんこう</rt></ruby></a>
-      <a href="#problems" data-view="problems"><ruby>課題<rt>かだい</rt></ruby>と<ruby>解決<rt>かいけつ</rt></ruby></a>
-      <a href="#sakurai" data-view="sakurai"><ruby>桜井<rt>さくらい</rt></ruby>さんの<ruby>動画<rt>どうが</rt></ruby></a>
-      <a href="#library" data-view="library"><ruby>資料<rt>しりょう</rt></ruby></a>
-      <a href="#progress" data-view="progress"><ruby>進捗<rt>しんちょく</rt></ruby></a>
+      <a href="#quiz" data-views="quiz review">今日の学習</a>
+      <a href="#practice" data-views="practice verbal breakdown rules problems playtest"><ruby>練習<rt>れんしゅう</rt></ruby></a>
+      <a href="#project" data-views="project doc kikaku"><ruby>企画<rt>きかく</rt></ruby>ノート</a>
+      <a href="#read" data-views="read glossary sakurai library">読む・見る</a>
+      <a href="#progress" data-views="progress"><ruby>進捗<rt>しんちょく</rt></ruby></a>
     </nav>
   </header>
 
@@ -35,23 +36,23 @@
 
   <!-- スマホ用の、画面下のタブ（幅が狭い時だけ表示） -->
   <nav class="tabbar" aria-label="タブ">
-    <a href="#quiz" data-view="quiz">
+    <a href="#quiz" data-views="quiz review">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>
       <span>今日の学習</span>
     </a>
-    <a href="#breakdown" data-view="breakdown">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg>
-      <span>分解</span>
+    <a href="#practice" data-views="practice verbal breakdown rules problems playtest">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4zM14 6l4 4"/></svg>
+      <span>練習</span>
     </a>
-    <a href="#rules" data-view="rules">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9m4 0h3M4 17h3m4 0h9M15 4v6M9 14v6"/></svg>
-      <span>ルール変更</span>
+    <a href="#project" data-views="project doc kikaku">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h10l3 3v15H6zM9 9h7M9 13h7M9 17h4"/></svg>
+      <span>企画ノート</span>
     </a>
-    <a href="#problems" data-view="problems">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3z"/></svg>
-      <span>課題と解決</span>
+    <a href="#read" data-views="read glossary sakurai library">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5c3-1 6-1 9 1 3-2 6-2 9-1v14c-3-1-6-1-9 1-3-2-6-2-9-1zM12 6v14"/></svg>
+      <span>読む・見る</span>
     </a>
-    <a href="#progress" data-view="progress">
+    <a href="#progress" data-views="progress">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20V12M12 20V6M19 20v-9"/></svg>
       <span>進捗</span>
     </a>
@@ -62,8 +63,10 @@
   <script src="data/tips.js"></script>
   <script src="data/rules.js"></script>
   <script src="data/problems.js"></script>
+  <script src="data/verbal.js"></script>
   <script src="data/library.js"></script>
   <script src="data/sakurai.js"></script>
+  <script src="data/pitchguide.js"></script>
   <!-- 機能（この順番で読み込む） -->
   <script src="js/ruby.js"></script>
   <script src="js/store.js"></script>
@@ -73,6 +76,10 @@
   <script src="js/quiz.js"></script>
   <script src="js/exercise.js"></script>
   <script src="js/breakdown.js"></script>
+  <script src="js/notebook.js"></script>
+  <script src="js/notebooks.js"></script>
+  <script src="js/pitchdoc.js"></script>
+  <script src="js/hubs.js"></script>
   <script src="js/library.js"></script>
   <script src="js/glossary.js"></script>
   <script src="js/sakurai.js"></script>

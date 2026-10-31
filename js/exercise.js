@@ -70,8 +70,9 @@ const Exercise = (() => {
         <p>${Ruby.render(item.situation)}</p>
         ${item.demo ? Demos.slot(item.demo) : ''}
         <div class="prompt">${Ruby.render(item.prompt)}</div>
-        <label class="label" for="answer">${kind.answerLabel}</label>
+        <label class="label" for="answer">${item.answerLabel || kind.answerLabel}</label>
         <textarea id="answer" rows="5" placeholder="短くてもいいので、思いつくことを書いてみましょう">${Ruby.escape(record.answer || '')}</textarea>
+        ${item.limit ? '<p class="note counter"></p>' : ''}
         <p class="note save-state">書いた内容は、自動で保存されます。</p>
         <div class="btn-row reveal-row"><button class="btn" id="reveal" type="button">解説を見て、答え合わせ</button></div>
         <div class="reveal-area"></div>
@@ -83,6 +84,17 @@ const Exercise = (() => {
     const updateButton = () => { revealButton.disabled = !answer.value.trim(); };
     updateButton();
     answer.addEventListener('input', updateButton);
+
+    // 文字数の目安がある練習では、文字数を数えて見せる
+    const counter = app.querySelector('.counter');
+    const updateCounter = () => {
+      if (!counter) return;
+      const length = [...answer.value.replace(/\s/g, '')].length;
+      counter.textContent = `${length}文字（目安：${item.limit}文字まで）`;
+      counter.classList.toggle('over', length > item.limit);
+    };
+    updateCounter();
+    answer.addEventListener('input', updateCounter);
     autosave(answer, (value) => Store.saveExercise(item.id, { answer: value }), app.querySelector('.save-state'));
 
     revealButton.addEventListener('click', () => {
@@ -114,7 +126,9 @@ const Exercise = (() => {
           ${approaches}
           ${item.approaches && points ? '<h4>まとめ</h4>' : ''}
           ${points}
+          ${item.examples ? `<h4>書き方の例</h4><ul class="points examples">${item.examples.map((e) => `<li>${Ruby.render(e)}</li>`).join('')}</ul>` : ''}
           ${item.note ? `<p class="note">${Ruby.render(item.note)}</p>` : ''}
+          ${projectButton(item)}
           ${UI.renderSources(item.sources)}
           <label class="label" for="reflection">自分の答えと比べて、気づいたこと（なくてもよい）</label>
           <textarea id="reflection" rows="3">${Ruby.escape(saved.reflection || '')}</textarea>
@@ -125,7 +139,39 @@ const Exercise = (() => {
           </div>
         </div>`;
       autosave(app.querySelector('#reflection'), (value) => Store.saveExercise(item.id, { reflection: value }));
+      bindProjectButton(app, item);
     }
+  }
+
+  // 「企画ノートに入れる」ボタン（projectField がある練習だけ）
+  function projectButton(item) {
+    if (!item.projectField) return '';
+    const project = Store.activeProject();
+    if (!project) {
+      return '<p class="note">企画ノートを作ると、ここから答えを企画に入れられます。<a href="#project">企画ノートへ</a></p>';
+    }
+    return `
+      <div class="btn-row">
+        <button class="btn secondary" id="to-project" type="button">
+          企画ノート「${Ruby.escape(project.title || '名前のない企画')}」の「${Ruby.escape(Notebooks.fieldLabel(item.projectField))}」に入れる
+        </button>
+      </div>
+      <p class="note project-sent"></p>`;
+  }
+
+  function bindProjectButton(app, item) {
+    const button = app.querySelector('#to-project');
+    if (!button) return;
+    button.addEventListener('click', () => {
+      const project = Store.activeProject();
+      const answer = (app.querySelector('#answer').value || '').trim();
+      if (!project || !answer) return;
+      const current = (project[item.projectField] || '').trim();
+      Store.updateListItem('projects', project.id, {
+        [item.projectField]: current ? `${current}\n${answer}` : answer,
+      });
+      app.querySelector('.project-sent').innerHTML = `入れました。<a href="#project/${project.id}">企画ノートを開く</a>`;
+    });
   }
 
   return { showList, showItem, autosave, countDone };

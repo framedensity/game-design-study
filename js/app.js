@@ -1,11 +1,14 @@
 // 画面の切り替え
 // URLの # のあとで画面が決まります（例：#rules は一覧、#rules/r001 はその課題）。
+// メニューは5つ：今日の学習／練習／企画ノート／読む・見る／進捗。
 
 (() => {
   const app = document.getElementById('app');
   const data = window.GDS_DATA || {};
   const questions = (data.quiz && data.quiz.questions) || [];
   const QUICK_COUNT = 5;
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const BACKUP_EVERY_DAYS = 30;
 
   // 書いてから答え合わせする練習の種類
   const RULES = {
@@ -22,6 +25,13 @@
     answerLabel: 'あなたの解決案',
     items: (data.problems && data.problems.items) || [],
   };
+  const VERBAL = {
+    route: 'verbal',
+    title: '言語化',
+    lead: '考えを、短く、伝わる言葉にする練習です。まず自分で書いてから、書き方のコツと例を見ます。答えは、企画ノートに入れられるものもあります。',
+    answerLabel: 'あなたの答え',
+    items: (data.verbal && data.verbal.items) || [],
+  };
 
   // 「今日のひとこと」は、ページを開いた時に1つ選んで、そのまま使う
   const todayTip = Tips.pick({});
@@ -29,11 +39,18 @@
   const views = {
     quiz: showHome,
     review: showReview,
-    glossary: (param) => Glossary.show(app, questions, param),
-    sakurai: () => SakuraiGuide.show(app),
+    practice: () => Hubs.showPractice(app, { verbal: VERBAL, rules: RULES, problems: PROBLEMS }),
+    verbal: (param) => showExercise(VERBAL, param),
     breakdown: (param) => (param ? Breakdown.showEditor(app, param) : Breakdown.showList(app)),
     rules: (param) => showExercise(RULES, param),
     problems: (param) => showExercise(PROBLEMS, param),
+    playtest: (param) => (param ? Notebooks.playtests.showEditor(app, param) : Notebooks.playtests.showList(app)),
+    project: (param) => (param ? Notebooks.projects.showEditor(app, param) : Notebooks.projects.showList(app)),
+    kikaku: () => PitchDoc.showGuide(app),
+    doc: (param) => PitchDoc.showProjectDoc(app, param),
+    read: () => Hubs.showRead(app, questions.length),
+    glossary: (param) => Glossary.show(app, questions, param),
+    sakurai: () => SakuraiGuide.show(app),
     library: () => Library.show(app),
     progress: showProgress,
   };
@@ -55,8 +72,9 @@
   function route() {
     const [name, param] = location.hash.slice(1).split('/');
     const view = views[name] ? name : 'quiz';
+    // メニューの1つが、いくつかの画面をまとめている（data-views に並べた画面で光る）
     document.querySelectorAll('.site-nav a, .tabbar a').forEach((a) => {
-      a.classList.toggle('active', a.dataset.view === view);
+      a.classList.toggle('active', a.dataset.views.split(' ').includes(view));
     });
     views[view](param);
     window.scrollTo(0, 0);
@@ -100,13 +118,20 @@
     QuizRunner.start(app, list, runOptions(mode));
   }
 
-  // 「おまかせ」で出す問題：間違えた問題 → まだ解いていない問題 → 解いたことがある問題 の順
+  // 今日復習する問題（間違えた問題と、復習の日が来た問題）
+  function dueQuestions() {
+    const ids = Store.dueQuestionIds();
+    return questions.filter((q) => ids.includes(q.id));
+  }
+
+  // 「おまかせ」で出す問題：今日の復習 → まだ解いていない問題 → 解いたことがある問題 の順
   function pickQuick(count) {
     const progress = Store.loadProgress();
-    const review = QuizRunner.shuffle(questions.filter((q) => progress.review.includes(q.id)));
+    const due = QuizRunner.shuffle(dueQuestions());
+    const dueIds = due.map((q) => q.id);
     const fresh = QuizRunner.shuffle(questions.filter((q) => !progress.answers[q.id]));
-    const rest = QuizRunner.shuffle(questions.filter((q) => progress.answers[q.id] && !progress.review.includes(q.id)));
-    return [...review, ...fresh, ...rest].slice(0, count);
+    const rest = QuizRunner.shuffle(questions.filter((q) => progress.answers[q.id] && !dueIds.includes(q.id)));
+    return [...due, ...fresh, ...rest].slice(0, count);
   }
 
   // 途中のクイズのカード（なければ空）
@@ -140,10 +165,45 @@
     });
   }
 
-  // ----- トップ（今日の学習） -----
+  // 書いたものがあって、しばらく書き出していない時だけ、バックアップをすすめる
+  function backupCard() {
+    const settings = Store.loadSettings();
+    const progress = Store.loadProgress();
+    const hasWriting = progress.breakdowns.length || progress.projects.length || progress.playtests.length
+      || Object.keys(progress.exercises).length;
+    const now = Date.now();
+    if (!hasWriting) return '';
+    if (now - (settings.lastExportAt || 0) < BACKUP_EVERY_DAYS * DAY_MS) return '';
+    if ((settings.backupSnoozeUntil || 0) > now) return '';
+    return `
+      <div class="card backup">
+        <h3>記録のバックアップ</h3>
+        <p class="note">書いた記録は、このスマホ（ブラウザ）の中だけに保存されています。ときどきファイルに保存しておくと、安心です。</p>
+        <div class="btn-row">
+          <button class="btn" type="button" id="backup-now">ファイルに保存する</button>
+          <button class="btn secondary" type="button" id="backup-later">あとで</button>
+        </div>
+      </div>`;
+  }
+
+  function bindBackupCard(rerender) {
+    const now = app.querySelector('#backup-now');
+    if (!now) return;
+    now.addEventListener('click', () => {
+      UI.exportProgress();
+      rerender();
+    });
+    app.querySelector('#backup-later').addEventListener('click', () => {
+      Store.saveSettings({ ...Store.loadSettings(), backupSnoozeUntil: Date.now() + 7 * DAY_MS });
+      rerender();
+    });
+  }
+
+  // ----- 今日の学習 -----
   function showHome() {
     const progress = Store.loadProgress();
     const laterTips = progress.later.map(Tips.byId).filter(Boolean);
+    const due = dueQuestions();
     const options = categories()
       .map((c) => `<option value="${Ruby.escape(c)}">${Ruby.escape(Ruby.plain(c))}</option>`)
       .join('');
@@ -153,26 +213,25 @@
       <p class="lead">時間がある分だけ進めましょう。答えるたびに保存されるので、いつやめても大丈夫です。</p>
 
       ${resumeCard()}
+      ${backupCard()}
 
       <div class="card">
         <h3>すぐに始める</h3>
-        <p class="note">初めての考え方は、先に「学ぶカード」で読んでから、問題で確かめます。間違えた問題 → まだ解いていない問題 の順に出ます。</p>
+        <p class="note">今日の復習（${due.length}問）→ まだ解いていない問題 の順に出ます。初めての考え方は、先に「学ぶカード」で読んでから、問題で確かめます。</p>
         <div class="btn-row">
           <button class="btn" type="button" id="quick">おまかせ ${QUICK_COUNT}問</button>
-          <a class="btn secondary" href="#glossary">用語集を読む</a>
+          ${due.length ? `<a class="btn secondary" href="#review">今日の復習（${due.length}問）</a>` : ''}
         </div>
       </div>
 
       <div class="card">
         <h3>ほかの学び方</h3>
         <div class="modes">
-          <a class="mode" href="#breakdown"><strong>ゲーム<ruby>分解<rt>ぶんかい</rt></ruby></strong><span>遊んだゲームを、型に沿って書き出す（${Store.loadBreakdowns().length}件）</span></a>
-          <a class="mode" href="#rules"><strong>ルール<ruby>変更<rt>へんこう</rt></ruby></strong><span>ルールを1つ変えたら？を予想する（${Exercise.countDone(RULES.items)} / ${RULES.items.length}）</span></a>
-          <a class="mode" href="#problems"><strong><ruby>課題<rt>かだい</rt></ruby>と<ruby>解決<rt>かいけつ</rt></ruby></strong><span>プレイヤーの困りごとを解く（${Exercise.countDone(PROBLEMS.items)} / ${PROBLEMS.items.length}）</span></a>
-          <a class="mode" href="#sakurai"><strong><ruby>桜井<rt>さくらい</rt></ruby>さんの<ruby>動画<rt>どうが</rt></ruby>ガイド</strong><span>モーションやゲーム性の動画を、テーマ別に見る（${SakuraiGuide.countDone()} / ${SakuraiGuide.items.length}）</span></a>
-          <a class="mode" href="#glossary"><strong><ruby>用語集<rt>ようごしゅう</rt></ruby></strong><span>考え方を、分野ごとに読む（${questions.length}）</span></a>
-          <a class="mode" href="#library"><strong><ruby>資料<rt>しりょう</rt></ruby></strong><span>日本の作り手の本・講演・動画（${Library.countDone()} / ${Library.items.length}）</span></a>
-          <a class="mode" href="#review"><strong><ruby>復習<rt>ふくしゅう</rt></ruby></strong><span>間違えた問題（${progress.review.length}問）</span></a>
+          <a class="mode" href="#verbal"><strong><ruby>言語化<rt>げんごか</rt></ruby></strong><span>考えを、短く伝わる言葉にする（${Exercise.countDone(VERBAL.items)} / ${VERBAL.items.length}）</span></a>
+          <a class="mode" href="#project"><strong><ruby>企画<rt>きかく</rt></ruby>ノート</strong><span>自分の企画を、学んだことで育てる（${progress.projects.length}件）</span></a>
+          <a class="mode" href="#kikaku"><strong><ruby>企画書<rt>きかくしょ</rt></ruby>の書き方</strong><span>型・サンプル・練習</span></a>
+          <a class="mode" href="#practice"><strong><ruby>練習<rt>れんしゅう</rt></ruby></strong><span>ゲーム分解・ルール変更・課題と解決・試遊ログ</span></a>
+          <a class="mode" href="#read"><strong>読む・見る</strong><span>用語集・桜井さんの動画・資料</span></a>
         </div>
       </div>
 
@@ -198,6 +257,7 @@
       ${laterTips.length ? `<div class="card"><h3>あとでやる（${laterTips.length}）</h3>${laterTips.map(Tips.renderCard).join('')}</div>` : ''}`;
 
     bindResumeCard(showHome);
+    bindBackupCard(showHome);
     Demos.mountAll(app);
     Tips.bindActions(app, showHome);
 
@@ -212,17 +272,15 @@
     });
   }
 
-  // ----- 復習 -----
+  // ----- 今日の復習 -----
   function showReview() {
-    const reviewIds = Store.loadProgress().review;
-    const list = questions.filter((q) => reviewIds.includes(q.id));
-
+    const list = dueQuestions();
     const body = list.length
-      ? `<p class="lead">間違えた問題が ${list.length} 問あります。正解すると、復習リストから外れます。</p>
+      ? `<p class="lead">今日復習する問題が ${list.length} 問あります。間違えた問題と、前に正解してから日数がたった問題です。正解を重ねるほど、次に出るまでの日数がのびます（1日 → 3日 → 7日 → 21日）。</p>
          <div class="card"><div class="btn-row" style="margin:0"><button class="btn" id="start" type="button">復習をはじめる</button></div></div>`
-      : '<div class="card"><p>復習する問題はありません。クイズで間違えた問題が、ここに入ります。</p></div>';
+      : '<div class="card"><p>今日復習する問題はありません。間違えた問題や、日数がたった問題が、ここに入ります。</p></div>';
 
-    app.innerHTML = `<h2><ruby>復習<rt>ふくしゅう</rt></ruby></h2>${resumeCard()}${body}`;
+    app.innerHTML = `<h2>今日の<ruby>復習<rt>ふくしゅう</rt></ruby></h2>${resumeCard()}${body}`;
     bindResumeCard(showReview);
     const startButton = app.querySelector('#start');
     if (startButton) startButton.addEventListener('click', () => startQuiz(list, 'review'));
@@ -238,6 +296,7 @@
     const rate = attempts ? Math.round((correct / attempts) * 100) : 0;
     const handsOnIds = Object.keys(progress.handsOn);
     const handsOnTotal = Tips.items.filter((t) => t.type === 'やってみよう').length;
+    const settings = Store.loadSettings();
 
     const categoryRows = categories().map((c) => {
       const inCategory = questions.filter((q) => q.category === c);
@@ -258,19 +317,24 @@
       .sort((a, b) => b.at - a.at)
       .map((r) => `<tr><td>${formatDate(r.at)}</td><td>${Ruby.render(r.tip.title)}</td></tr>`).join('');
 
+    const stat = (num, label) => `<div class="stat"><div class="num">${num}</div><div class="label">${label}</div></div>`;
+
     app.innerHTML = `
       <h2><ruby>進捗<rt>しんちょく</rt></ruby></h2>
       <div class="stats">
-        <div class="stat"><div class="num">${answeredIds.length} / ${questions.length}</div><div class="label">解いた問題（種類）</div></div>
-        <div class="stat"><div class="num">${attempts}</div><div class="label">答えた回数</div></div>
-        <div class="stat"><div class="num">${rate}%</div><div class="label">正解率</div></div>
-        <div class="stat"><div class="num">${progress.review.length}</div><div class="label">復習リストの問題</div></div>
-        <div class="stat"><div class="num">${handsOnIds.length} / ${handsOnTotal}</div><div class="label">手を動かした課題</div></div>
-        <div class="stat"><div class="num">${progress.breakdowns.length}</div><div class="label">書いたゲーム分解</div></div>
-        <div class="stat"><div class="num">${Exercise.countDone(RULES.items)} / ${RULES.items.length}</div><div class="label">ルール変更（答え合わせ済み）</div></div>
-        <div class="stat"><div class="num">${Exercise.countDone(PROBLEMS.items)} / ${PROBLEMS.items.length}</div><div class="label">課題と解決（答え合わせ済み）</div></div>
-        <div class="stat"><div class="num">${Library.countDone()} / ${Library.items.length}</div><div class="label">読んだ・見た資料</div></div>
-        <div class="stat"><div class="num">${SakuraiGuide.countDone()} / ${SakuraiGuide.items.length}</div><div class="label">見た桜井さんの動画</div></div>
+        ${stat(`${answeredIds.length} / ${questions.length}`, '解いた問題（種類）')}
+        ${stat(attempts, '答えた回数')}
+        ${stat(`${rate}%`, '正解率')}
+        ${stat(dueQuestions().length, '今日の復習')}
+        ${stat(`${Exercise.countDone(VERBAL.items)} / ${VERBAL.items.length}`, '言語化（答え合わせ済み）')}
+        ${stat(progress.projects.length, '企画ノート')}
+        ${stat(progress.breakdowns.length, '書いたゲーム分解')}
+        ${stat(`${Exercise.countDone(RULES.items)} / ${RULES.items.length}`, 'ルール変更（答え合わせ済み）')}
+        ${stat(`${Exercise.countDone(PROBLEMS.items)} / ${PROBLEMS.items.length}`, '課題と解決（答え合わせ済み）')}
+        ${stat(progress.playtests.length, '試遊ログ')}
+        ${stat(`${handsOnIds.length} / ${handsOnTotal}`, '手を動かした課題')}
+        ${stat(`${SakuraiGuide.countDone()} / ${SakuraiGuide.items.length}`, '見た桜井さんの動画')}
+        ${stat(`${Library.countDone()} / ${Library.items.length}`, '読んだ・見た資料')}
       </div>
 
       <div class="card">
@@ -289,22 +353,19 @@
       </div>
 
       <div class="card">
-        <h3>記録の保存</h3>
-        <p class="note">記録はこのブラウザの中に保存されます。別のブラウザやPCで続けたい時は、書き出したファイルを読み込んでください。</p>
+        <h3>記録の保存（バックアップ）</h3>
+        <p class="note">記録はこのブラウザの中に保存されます。ファイルに保存しておけば、別のブラウザやPCでも読み込んで続けられます。
+          ${settings.lastExportAt ? `最後に保存した日：${formatDate(settings.lastExportAt)}` : 'まだ一度も保存していません。'}</p>
         <div class="btn-row">
-          <button class="btn secondary" id="export" type="button">記録を書き出す</button>
-          <label class="btn secondary">記録を読み込む<input id="import" type="file" accept="application/json" hidden></label>
+          <button class="btn secondary" id="export" type="button">ファイルに保存する</button>
+          <label class="btn secondary">ファイルから読み込む<input id="import" type="file" accept="application/json" hidden></label>
           <button class="btn danger" id="reset" type="button">記録を消す</button>
         </div>
       </div>`;
 
     app.querySelector('#export').addEventListener('click', () => {
-      const blob = new Blob([Store.exportJson()], { type: 'application/json' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `game-design-study-${new Date().toISOString().slice(0, 10)}.json`;
-      link.click();
-      URL.revokeObjectURL(link.href);
+      UI.exportProgress();
+      showProgress();
     });
 
     app.querySelector('#import').addEventListener('change', (event) => {

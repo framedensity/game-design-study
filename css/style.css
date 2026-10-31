@@ -43,6 +43,10 @@ body {
   font: 16px/1.9 -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
 }
 
+/* ===== リンク（ブラウザの標準の青・紫だと、ダークモードで読みにくいため） ===== */
+a { color: var(--accent); }
+a:visited { color: var(--accent); }
+
 /* ===== ふりがな ===== */
 rt { font-size: 0.55em; color: var(--mute); }
 /* ボタンで「なし」にすると、ふりがなを隠す */
@@ -350,6 +354,62 @@ dl dd { margin: 2px 0 0; }
 .video:first-of-type { border-top: none; }
 .video p { margin: 2px 0; }
 .video .btn-row { margin-top: 6px; }
+
+/* ===== 言語化の文字数・企画ノート ===== */
+.counter.over { color: var(--ng); font-weight: 700; }
+.examples li { color: var(--ink); }
+.nb-label-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.field-link { font-size: 13px; color: var(--accent); text-decoration: none; white-space: nowrap; }
+.backup { border-color: var(--warn); background: var(--warn-bg); }
+
+/* ===== 攻撃のタイムラインの つまみ ===== */
+.slider { display: flex; flex-direction: column; font-size: 13px; min-width: 130px; flex: 1; }
+.slider input { width: 100%; }
+
+/* ===== UIのフィードバックの図 ===== */
+.uf-wrap { display: flex; gap: 16px; flex-wrap: wrap; }
+.uf-col { flex: 1; min-width: 140px; text-align: center; }
+.uf-btn {
+  font: inherit;
+  font-weight: 700;
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+}
+.uf-btn.rich { border-color: var(--accent); transition: transform 0.08s, background 0.08s; }
+.uf-btn.rich.pressed { animation: uf-press 0.18s ease-out; }
+@keyframes uf-press {
+  0% { transform: translateY(3px) scale(0.96); background: var(--accent); color: var(--card); }
+  100% { transform: none; }
+}
+.uf-count { display: inline-block; }
+.uf-count.bump { animation: uf-bump 0.25s ease-out; }
+@keyframes uf-bump {
+  0% { transform: scale(1.6); color: var(--accent); }
+  100% { transform: none; }
+}
+
+/* ===== 企画書 ===== */
+.doc { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 22px; margin: 12px 0; }
+.doc-kicker { margin: 0; font-size: 12px; color: var(--mute); letter-spacing: 0.1em; }
+.doc-title { margin: 2px 0 12px; font-size: 24px; }
+.doc-section { border-top: 1px solid var(--line); padding: 10px 0; }
+.doc-section h3 { font-size: 14px; color: var(--accent); margin: 0 0 4px; }
+.doc-section p { margin: 4px 0; }
+.doc-point { font-size: 13px; color: var(--ok); }
+details.sample .doc { margin-top: 8px; }
+
+@media print {
+  .site-header, .tabbar, .no-print, .btn-row { display: none !important; }
+  body { background: #fff; color: #000; }
+  .container { padding: 0; }
+  .doc { border: none; padding: 0; }
+  .doc-section.empty { display: none; }
+}
 
 /* ===== 資料 ===== */
 .lib-item { border-top: 1px solid var(--line); padding: 10px 0; }
