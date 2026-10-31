@@ -345,6 +345,12 @@ dl dd { margin: 2px 0 0; }
 .mode strong { display: block; }
 .mode span { font-size: 13px; color: var(--mute); }
 
+/* ===== 桜井さんの動画ガイド ===== */
+.video { border-top: 1px solid var(--line); padding: 10px 0; }
+.video:first-of-type { border-top: none; }
+.video p { margin: 2px 0; }
+.video .btn-row { margin-top: 6px; }
+
 /* ===== 資料 ===== */
 .lib-item { border-top: 1px solid var(--line); padding: 10px 0; }
 .lib-item:first-of-type { border-top: none; }

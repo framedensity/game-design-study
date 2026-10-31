@@ -2,7 +2,8 @@
 // 本を読んでいなくても、ここで先に学べます。
 
 const Glossary = (() => {
-  function show(app, questions) {
+  // openId を渡すと、その用語を開いて、そこまでスクロールする（例：#glossary/s002）
+  function show(app, questions, openId) {
     const categories = [...new Set(questions.map((q) => q.category))];
     const answers = Store.loadProgress().answers;
 
@@ -13,7 +14,7 @@ const Glossary = (() => {
         <div class="card">
           <h3>${Ruby.render(c)}</h3>
           ${questions.filter((q) => q.category === c).map((q) => `
-            <details class="term">
+            <details class="term" data-id="${q.id}">
               <summary>${Ruby.render(q.concept || q.choices[q.answer])}${answers[q.id] ? '<span class="status verified">クイズ済み</span>' : ''}</summary>
               <p>${Ruby.render(q.explanation)}</p>
               ${q.example ? `<h4 class="label">例</h4><p>${Ruby.render(q.example)}</p>` : ''}
@@ -33,6 +34,12 @@ const Glossary = (() => {
         Demos.mountAll(d);
       });
     });
+
+    const target = openId && app.querySelector(`details.term[data-id="${openId}"]`);
+    if (target) {
+      target.open = true;
+      setTimeout(() => target.scrollIntoView({ block: 'start' }), 0);
+    }
   }
 
   return { show };

@@ -4,7 +4,7 @@
 // つながっていない時（電車の中など）は、保存しておいたものを使います。
 // ファイルを足した時は、下の FILES にも足してください。
 
-const CACHE = 'gds-v2';
+const CACHE = 'gds-v3';
 const FILES = [
   './',
   './index.html',
@@ -15,6 +15,7 @@ const FILES = [
   './data/rules.js',
   './data/problems.js',
   './data/library.js',
+  './data/sakurai.js',
   './js/ruby.js',
   './js/store.js',
   './js/ui.js',
@@ -25,6 +26,7 @@ const FILES = [
   './js/breakdown.js',
   './js/library.js',
   './js/glossary.js',
+  './js/sakurai.js',
   './js/app.js',
   './icons/icon-192.png',
   './icons/icon-512.png',

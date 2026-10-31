@@ -29,7 +29,8 @@
   const views = {
     quiz: showHome,
     review: showReview,
-    glossary: () => Glossary.show(app, questions),
+    glossary: (param) => Glossary.show(app, questions, param),
+    sakurai: () => SakuraiGuide.show(app),
     breakdown: (param) => (param ? Breakdown.showEditor(app, param) : Breakdown.showList(app)),
     rules: (param) => showExercise(RULES, param),
     problems: (param) => showExercise(PROBLEMS, param),
@@ -168,6 +169,7 @@
           <a class="mode" href="#breakdown"><strong>ゲーム<ruby>分解<rt>ぶんかい</rt></ruby></strong><span>遊んだゲームを、型に沿って書き出す（${Store.loadBreakdowns().length}件）</span></a>
           <a class="mode" href="#rules"><strong>ルール<ruby>変更<rt>へんこう</rt></ruby></strong><span>ルールを1つ変えたら？を予想する（${Exercise.countDone(RULES.items)} / ${RULES.items.length}）</span></a>
           <a class="mode" href="#problems"><strong><ruby>課題<rt>かだい</rt></ruby>と<ruby>解決<rt>かいけつ</rt></ruby></strong><span>プレイヤーの困りごとを解く（${Exercise.countDone(PROBLEMS.items)} / ${PROBLEMS.items.length}）</span></a>
+          <a class="mode" href="#sakurai"><strong><ruby>桜井<rt>さくらい</rt></ruby>さんの<ruby>動画<rt>どうが</rt></ruby>ガイド</strong><span>モーションやゲーム性の動画を、テーマ別に見る（${SakuraiGuide.countDone()} / ${SakuraiGuide.items.length}）</span></a>
           <a class="mode" href="#glossary"><strong><ruby>用語集<rt>ようごしゅう</rt></ruby></strong><span>考え方を、分野ごとに読む（${questions.length}）</span></a>
           <a class="mode" href="#library"><strong><ruby>資料<rt>しりょう</rt></ruby></strong><span>日本の作り手の本・講演・動画（${Library.countDone()} / ${Library.items.length}）</span></a>
           <a class="mode" href="#review"><strong><ruby>復習<rt>ふくしゅう</rt></ruby></strong><span>間違えた問題（${progress.review.length}問）</span></a>
@@ -268,6 +270,7 @@
         <div class="stat"><div class="num">${Exercise.countDone(RULES.items)} / ${RULES.items.length}</div><div class="label">ルール変更（答え合わせ済み）</div></div>
         <div class="stat"><div class="num">${Exercise.countDone(PROBLEMS.items)} / ${PROBLEMS.items.length}</div><div class="label">課題と解決（答え合わせ済み）</div></div>
         <div class="stat"><div class="num">${Library.countDone()} / ${Library.items.length}</div><div class="label">読んだ・見た資料</div></div>
+        <div class="stat"><div class="num">${SakuraiGuide.countDone()} / ${SakuraiGuide.items.length}</div><div class="label">見た桜井さんの動画</div></div>
       </div>
 
       <div class="card">

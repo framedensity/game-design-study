@@ -49,10 +49,11 @@ const Store = (() => {
   // breakdowns: 保存したゲーム分解（新しい順）
   // breakdownDraft: 書きかけのゲーム分解
   // library:  「読んだ・見た」資料 { ID: 日時 }
+  // watched:  「見た」桜井さんの動画 { ID: 日時 }
   function emptyProgress() {
     return {
       answers: {}, review: [], sessions: [], handsOn: {}, later: [],
-      exercises: {}, breakdowns: [], breakdownDraft: null, library: {},
+      exercises: {}, breakdowns: [], breakdownDraft: null, library: {}, watched: {},
     };
   }
 
@@ -197,6 +198,18 @@ const Store = (() => {
     saveProgress(progress);
   }
 
+  // ----- 桜井さんの動画 -----
+  function isWatched(id) {
+    return Boolean(loadProgress().watched[id]);
+  }
+
+  function toggleWatched(id) {
+    const progress = loadProgress();
+    if (progress.watched[id]) delete progress.watched[id];
+    else progress.watched[id] = Date.now();
+    saveProgress(progress);
+  }
+
   // ----- 設定 -----
   function loadSettings() {
     return read(SETTINGS_KEY, { ruby: true });
@@ -225,6 +238,7 @@ const Store = (() => {
     getExercise, saveExercise,
     loadBreakdowns, addBreakdown, updateBreakdown, deleteBreakdown, loadBreakdownDraft, saveBreakdownDraft,
     isLibraryDone, toggleLibraryDone,
+    isWatched, toggleWatched,
     loadSettings, saveSettings, exportJson, importJson,
   };
 })();
