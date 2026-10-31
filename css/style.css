@@ -1,0 +1,288 @@
+/* ===== 色とサイズ（ここを変えると全体の見た目が変わります） ===== */
+:root {
+  --bg: #f7f6f3;
+  --card: #ffffff;
+  --ink: #1d1d1f;
+  --mute: #6b6b70;
+  --line: #e3e1dc;
+  --accent: #1d5fa8;
+  --accent-bg: #e3eefa;
+  --ok: #1f7a4d;
+  --ok-bg: #e4f3ea;
+  --ng: #b3261e;
+  --ng-bg: #fbe4e2;
+  --warn: #9a6200;
+  --warn-bg: #fdf0d5;
+  --radius: 12px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141416;
+    --card: #1e1e21;
+    --ink: #ececee;
+    --mute: #9a9aa1;
+    --line: #34343a;
+    --accent: #8ab8f0;
+    --accent-bg: #15263b;
+    --ok: #6fd19b;
+    --ok-bg: #163325;
+    --ng: #ff8a80;
+    --ng-bg: #3b1b19;
+    --warn: #f0b84d;
+    --warn-bg: #37290d;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.9 -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+}
+
+/* ===== ふりがな ===== */
+rt { font-size: 0.55em; color: var(--mute); }
+/* ボタンで「なし」にすると、ふりがなを隠す */
+.ruby-hidden rt { display: none; }
+/* 読みが未確認の言葉 */
+ruby.unverified { text-decoration: underline dotted var(--warn); }
+ruby.unverified rt { color: var(--warn); }
+
+/* ===== ヘッダー ===== */
+.site-header {
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+  /* iPhone のノッチ（画面上の切り欠き）にかからないようにする */
+  padding: max(12px, env(safe-area-inset-top)) 16px 8px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.header-row {
+  max-width: 820px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.site-title { font-size: 20px; margin: 0; }
+.site-nav {
+  max-width: 820px;
+  margin: 6px auto 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  font-size: 14px;
+}
+.site-nav a, .nav-soon {
+  padding: 2px 12px;
+  border-radius: 99px;
+  text-decoration: none;
+  color: var(--accent);
+  border: 1px solid var(--line);
+}
+.site-nav a.active { background: var(--accent); color: var(--card); border-color: var(--accent); }
+.site-nav a.active rt { color: var(--card); }
+.nav-soon { color: var(--mute); opacity: 0.6; cursor: default; }
+
+.toggle {
+  font: inherit;
+  font-size: 13px;
+  padding: 4px 12px;
+  border-radius: 99px;
+  border: 1px solid var(--line);
+  background: var(--accent-bg);
+  color: var(--accent);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* ===== スマホ用の、画面下のタブ ===== */
+.tabbar { display: none; }
+
+@media (max-width: 640px) {
+  .site-nav { display: none; }
+  .tabbar {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+    background: var(--card);
+    border-top: 1px solid var(--line);
+    /* iPhone の画面下のバーにかからないようにする */
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .tabbar a {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 8px 0 6px;
+    font-size: 11px;
+    color: var(--mute);
+    text-decoration: none;
+  }
+  .tabbar svg {
+    width: 24px;
+    height: 24px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .tabbar a.active { color: var(--accent); font-weight: 700; }
+  /* タブに本文が隠れないように、下に余白をとる */
+  .container { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+}
+
+/* ===== 本文 ===== */
+.container { max-width: 820px; margin: 0 auto; padding: 20px 16px 80px; }
+h2 { font-size: 22px; margin: 8px 0 12px; }
+h3 { font-size: 17px; margin: 0 0 8px; }
+.lead { color: var(--mute); margin-top: 0; }
+.note { color: var(--mute); font-size: 14px; }
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin: 14px 0;
+}
+
+/* ===== フォームとボタン ===== */
+.field { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 10px 0; }
+select {
+  font: inherit;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+}
+.btn {
+  font: inherit;
+  padding: 8px 20px;
+  border-radius: 10px;
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--card);
+  cursor: pointer;
+}
+.btn.secondary { background: transparent; color: var(--accent); }
+.btn.danger { background: transparent; color: var(--ng); border-color: var(--ng); }
+.btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+
+/* ===== クイズ ===== */
+.quiz-meta { display: flex; justify-content: space-between; color: var(--mute); font-size: 14px; }
+.tag {
+  display: inline-block;
+  font-size: 12px;
+  padding: 0 10px;
+  border-radius: 99px;
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+.question { font-size: 18px; font-weight: 600; margin: 10px 0 14px; }
+.choices { display: grid; gap: 8px; }
+.choice {
+  font: inherit;
+  text-align: left;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+}
+.choice:hover:not(:disabled) { border-color: var(--accent); }
+.choice:disabled { cursor: default; }
+.choice.correct { background: var(--ok-bg); border-color: var(--ok); }
+.choice.wrong { background: var(--ng-bg); border-color: var(--ng); }
+
+.feedback { margin-top: 16px; border-top: 1px dashed var(--line); padding-top: 12px; }
+.result-ok { color: var(--ok); font-weight: 700; }
+.result-ng { color: var(--ng); font-weight: 700; }
+.feedback h4 { margin: 12px 0 2px; font-size: 13px; color: var(--mute); letter-spacing: 0.05em; }
+.feedback p { margin: 2px 0 8px; }
+.sources { margin: 2px 0; padding-left: 18px; font-size: 14px; }
+.sources a { color: var(--accent); word-break: break-all; }
+.status {
+  display: inline-block;
+  font-size: 11px;
+  padding: 0 8px;
+  margin-left: 6px;
+  border-radius: 99px;
+  vertical-align: middle;
+}
+.status.verified { background: var(--ok-bg); color: var(--ok); }
+.status.unverified { background: var(--warn-bg); color: var(--warn); }
+.status.none { background: var(--accent-bg); color: var(--mute); }
+
+.btn.small { padding: 4px 14px; font-size: 14px; }
+.resume { border-color: var(--accent); background: var(--accent-bg); }
+.saved-note { margin: 12px 0 0; font-size: 12px; }
+
+/* ===== ひとこと（知識・コツ・やってみよう） ===== */
+.tip {
+  border-left: 4px solid var(--accent);
+  padding: 8px 0 8px 14px;
+  margin: 10px 0;
+}
+.tip.trick { border-left-color: var(--ok); }
+.tip.handson { border-left-color: var(--warn); }
+.tip-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tip-type {
+  font-size: 12px;
+  padding: 0 10px;
+  border-radius: 99px;
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+.tip.trick .tip-type { background: var(--ok-bg); color: var(--ok); }
+.tip.handson .tip-type { background: var(--warn-bg); color: var(--warn); }
+.tip p { margin: 6px 0; }
+
+/* ===== 動く図解 ===== */
+.demo {
+  margin: 10px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  outline: none;
+}
+.demo:focus { border-color: var(--accent); }
+.demo canvas { display: block; width: 100%; height: auto; }
+.demo-title { margin: 0 0 6px; font-size: 14px; font-weight: 600; }
+.demo-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px; }
+.demo-label { font-size: 13px; color: var(--mute); margin-left: 4px; }
+.chip {
+  font: inherit;
+  font-size: 13px;
+  padding: 2px 12px;
+  border-radius: 99px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+}
+.chip.on { background: var(--accent); border-color: var(--accent); color: var(--card); }
+
+/* ===== 進捗 ===== */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.stat { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+.stat .num { font-size: 26px; font-weight: 700; }
+.stat .label { color: var(--mute); font-size: 13px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+th { color: var(--mute); font-weight: 600; font-size: 13px; }
+.missed-list { padding-left: 18px; }
